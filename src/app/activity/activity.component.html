@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8 ">
+  <meta name="viewport" content="width=device-width, initial-scale=1.   ">
+  <title>Flowboard Activity Feed</title>
+  <!-- Tailwind CSS CDN -->
+
+  
+</head>
+<body class="p-4 sm:p-8  ">
+  <div class="flex flex-col items-center justify-center">
+    <div class="max-w-4xl w-full h-full">
+      <main class="w-full">
+        <div class="bg-white rounded-xl shadow-2xl p-8 mx-auto ">
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-purple-900">Activity Feed</h2>
+            <button class="px-4 py-2 border border-purple-600 text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-colors shadow-md hover:shadow-lg hover:translate-y-[-2px]">
+              Go Back
+            </button>
+          </div>
+          
+          <div class="space-y-6 relative timeline-line">
+            <!-- Feed Item -->
+            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d h-full">
+              <div class="flex-shrink-0 w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">JD</div>
+              <div class="flex-1">
+                <div class="text-sm text-gray-800">
+                  <span class="font-semibold text-purple-700">John Doe</span> created a new task <span class="font-semibold">"Design landing page"</span> in the <span class="font-semibold">"To Do"</span> column.
+                </div>
+                <div class="text-xs text-gray-500 mt-1">10 minutes ago</div>
+              </div>
+            </div>
+
+            <!-- Feed Item -->
+            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d">
+              <div class="flex-shrink-0 w-10 h-10 bg-gray-500 text-white rounded-full flex items-center justify-center font-bold">JS</div>
+              <div class="flex-1">
+                <div class="text-sm text-gray-800">
+                  <span class="font-semibold text-purple-700">Jane Smith</span> moved task <span class="font-semibold">"Develop backend API"</span> from <span class="font-semibold">"In Progress"</span> to <span class="font-semibold">"Done"</span>.
+                </div>
+                <div class="text-xs text-gray-500 mt-1">1 hour ago</div>
+              </div>
+            </div>
+
+            <!-- Feed Item -->
+            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d">
+              <div class="flex-shrink-0 w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">JD</div>
+              <div class="flex-1">
+                <div class="text-sm text-gray-800">
+                  <span class="font-semibold text-purple-700">John Doe</span> assigned task <span class="font-semibold">"Write documentation"</span> to <span class="font-semibold">Peter Jones</span>.
+                </div>
+                <div class="text-xs text-gray-500 mt-1">2 hours ago</div>
+              </div>
+            </div>
+
+            <!-- Feed Item -->
+            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d">
+              <div class="flex-shrink-0 w-10 h-10 bg-gray-500 text-white rounded-full flex items-center justify-center font-bold">PJ</div>
+              <div class="flex-1">
+                <div class="text-sm text-gray-800">
+                  <span class="font-semibold text-purple-700">Peter Jones</span> joined the board.
+                </div>
+                <div class="text-xs text-gray-500 mt-1">3 hours ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
+

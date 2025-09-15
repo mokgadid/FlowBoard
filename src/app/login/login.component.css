@@ -1,3 +1,4 @@
+
 .register-container {
     background: #f5f5dc;
     border-radius: 8px;
@@ -7,8 +8,6 @@
     box-shadow: 0 2px 8px rgba(128, 0, 128, 0.1);
     padding-bottom: 50px;
     margin-top: 150px;
-    
-    
 }
 
 .register-container h2 {
@@ -40,7 +39,7 @@
 button {
     width: 100%;
     padding: 10px 0;
-    background: #800080;
+    background: #800080cc;
     color: #f5f5dc;
     border: none;
     border-radius: 4px;
@@ -51,5 +50,5 @@ button {
 }
 
 button:hover {
-    background: #1d1422;
+    background: #511775;
 }
