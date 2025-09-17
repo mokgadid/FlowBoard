@@ -2,7 +2,9 @@ const Task = require('../models/Task');
 
 async function listTasks(req, res, next) {
   try {
-    const tasks = await Task.find().sort({ createdAt: 1 });
+    const query = { ownerId: req.userId };
+    if (req.query.boardId) query.boardId = req.query.boardId;
+    const tasks = await Task.find(query).sort({ createdAt: 1 });
     res.json(tasks);
   } catch (err) {
     next(err);
@@ -11,8 +13,8 @@ async function listTasks(req, res, next) {
 
 async function createTask(req, res, next) {
   try {
-    const { title, label, dueDate, status } = req.body;
-    const task = await Task.create({ title, label, dueDate, status });
+    const { title, label, dueDate, status, boardId } = req.body;
+    const task = await Task.create({ title, label, dueDate, status, boardId, ownerId: req.userId });
     res.status(201).json(task);
   } catch (err) {
     next(err);

@@ -4,6 +4,10 @@ const dotenv = require('dotenv');
 const { connectToDatabase } = require('./config/db');
 const tasksRouter = require('./routes/tasks');
 const authRouter = require('./routes/auth');
+const boardsRouter = require('./routes/boards');
+// Models for index sync
+const Board = require('./models/Board');
+const Task = require('./models/Task');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 dotenv.config();
@@ -24,6 +28,7 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/api/tasks', tasksRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/boards', boardsRouter);
 
 // 404 and error handlers
 app.use(notFound);
@@ -32,6 +37,12 @@ app.use(errorHandler);
 // Start
 connectToDatabase()
   .then(() => {
+    // Ensure indexes match current schema (drops outdated ones like a global unique name on boards)
+    Promise.all([Board.syncIndexes(), Task.syncIndexes()])
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn('Index sync warning:', err?.message || err);
+      });
     app.listen(port, () => {
       // eslint-disable-next-line no-console
       console.log(`FlowBoard backend listening on port ${port}`);

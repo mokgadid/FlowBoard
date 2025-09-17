@@ -6,11 +6,12 @@ const {
   updateTask,
   deleteTask
 } = require('../controllers/taskController');
+const { authRequired } = require('../middleware/auth');
 
-router.get('/', listTasks);
-router.post('/', createTask);
-router.put('/:id', updateTask);
-router.delete('/:id', deleteTask);
+router.get('/', authRequired, listTasks);
+router.post('/', authRequired, createTask);
+router.put('/:id', authRequired, updateTask);
+router.delete('/:id', authRequired, deleteTask);
 
 module.exports = router;
 

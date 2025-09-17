@@ -1,22 +1,30 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent {
   tasks: any[] = [];
+  boards: any[] = [];
+  selectedBoardId: string = '';
+  newBoardName: string = '';
   private apiBase = 'http://localhost:4000/api';
+  isLoadingBoard: boolean = false;
   toastMessage: string | null = null;
   toastKind: 'success' | 'danger' | null = null;
   private toastTimer: any;
+  showBalloon: boolean = false;
+  showBalloonMessage: boolean = false;
+  private pendingPayload: any | null = null;
 
  constructor(private router: Router, private http: HttpClient) { }
 
@@ -29,12 +37,27 @@ export class DashboardComponent {
   }
 
   ngOnInit(): void {
-    this.loadTasks();
+    this.loadBoards();
+  }
+
+  loadBoards(): void {
+    this.http.get<any[]>(`${this.apiBase}/boards`, { headers: this.authHeaders() }).subscribe((data) => {
+      this.boards = data;
+      if (!this.selectedBoardId && this.boards.length) {
+        this.selectedBoardId = this.boards[0]._id;
+      }
+      this.loadTasks();
+    });
   }
 
   loadTasks(): void {
-    this.http.get<any[]>(`${this.apiBase}/tasks`).subscribe((data) => {
+    const params = this.selectedBoardId ? `?boardId=${this.selectedBoardId}` : '';
+    this.isLoadingBoard = true;
+    this.http.get<any[]>(`${this.apiBase}/tasks${params}`, { headers: this.authHeaders() }).subscribe((data) => {
       this.tasks = data;
+      setTimeout(() => (this.isLoadingBoard = false), 2000);
+    }, () => {
+      setTimeout(() => (this.isLoadingBoard = false), 2000);
     });
   }
 
@@ -55,29 +78,66 @@ export class DashboardComponent {
   newTitle = '';
   newLabel = 'work';
   newDueDate: string = '';
+  today: string = this.formatDate(new Date());
 
   createTask(): void {
     const payload = {
       title: this.newTitle,
       label: this.newLabel,
       dueDate: this.newDueDate || undefined,
-      status: 'todo'
+      status: 'todo',
+      boardId: this.selectedBoardId || undefined
     };
     if (!payload.title) return;
-    this.http.post<any>(`${this.apiBase}/tasks`, payload).subscribe({
-      next: () => {
-        this.newTitle = '';
-        this.newLabel = 'work';
-        this.newDueDate = '';
+    // prevent past due dates
+    if (this.newDueDate) {
+      const selected = new Date(this.newDueDate + 'T00:00:00');
+      const todayDate = new Date(this.today + 'T00:00:00');
+      if (selected < todayDate) {
+        this.showToast('Due date cannot be in the past', 'danger');
+        return;
+      }
+    }
+    // hold payload until user pops the balloon
+    this.pendingPayload = payload;
+    this.triggerBalloon();
+  }
+
+  createBoard(): void {
+    const name = this.newBoardName.trim();
+    if (!name) return;
+    this.http.post<any>(`${this.apiBase}/boards`, { name }, { headers: this.authHeaders() }).subscribe({
+      next: (board) => {
+        this.newBoardName = '';
+        this.boards.push(board);
+        this.selectedBoardId = board._id;
         this.loadTasks();
-        this.showToast('Task successfully created', 'success');
+        this.showToast('Board created', 'success');
       },
-      error: () => this.showToast('Failed to create task', 'danger')
+      error: (err) => {
+        if (err?.status === 409) this.showToast('Board already exists', 'danger');
+        else this.showToast('Failed to create board', 'danger');
+      }
+    });
+  }
+
+  deleteBoard(id: string): void {
+    if (!confirm('Delete this board? This will not delete tasks in this demo.')) return;
+    this.http.delete(`${this.apiBase}/boards/${id}`, { headers: this.authHeaders() }).subscribe({
+      next: () => {
+        this.boards = this.boards.filter(b => b._id !== id);
+        if (this.selectedBoardId === id) {
+          this.selectedBoardId = this.boards[0]?._id || '';
+          this.loadTasks();
+        }
+        this.showToast('Board deleted', 'success');
+      },
+      error: () => this.showToast('Failed to delete board', 'danger')
     });
   }
 
   deleteTask(id: string): void {
-    this.http.delete(`${this.apiBase}/tasks/${id}`).subscribe({
+    this.http.delete(`${this.apiBase}/tasks/${id}`, { headers: this.authHeaders() }).subscribe({
       next: () => {
         this.loadTasks();
         this.showToast('Task successfully deleted', 'danger');
@@ -150,7 +210,7 @@ export class DashboardComponent {
     const taskId = taskIdAttr || id;
     if (!taskId) return;
 
-    this.http.put(`${this.apiBase}/tasks/${taskId}`, { status }).subscribe({
+    this.http.put(`${this.apiBase}/tasks/${taskId}`, { status }, { headers: this.authHeaders() }).subscribe({
       next: () => {},
       error: () => {}
     });
@@ -164,5 +224,53 @@ export class DashboardComponent {
       this.toastMessage = null;
       this.toastKind = null;
     }, 2000);
+  }
+
+  private triggerBalloon(): void {
+    this.showBalloon = true;
+    this.showBalloonMessage = false;
+    // do not auto-hide; wait for user interaction
+  }
+
+  onBalloonClick(): void {
+    if (!this.pendingPayload) {
+      this.showBalloon = false;
+      this.showBalloonMessage = false;
+      return;
+    }
+    // now actually create the task
+    this.http.post<any>(`${this.apiBase}/tasks`, this.pendingPayload, { headers: this.authHeaders() }).subscribe({
+      next: () => {
+        this.pendingPayload = null;
+        this.newTitle = '';
+        this.newLabel = 'work';
+        this.newDueDate = '';
+        this.loadTasks();
+        this.showBalloonMessage = true;
+        // hide after animation
+        setTimeout(() => {
+          this.showBalloon = false;
+          this.showBalloonMessage = false;
+        }, 2000);
+      },
+      error: () => {
+        this.pendingPayload = null;
+        this.showBalloon = false;
+        this.showBalloonMessage = false;
+        this.showToast('Failed to create task', 'danger');
+      }
+    });
+  }
+
+  private formatDate(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  
+  private authHeaders(): HttpHeaders {
+    const token = localStorage.getItem('flowboard_token');
+    return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
 }

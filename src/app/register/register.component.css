@@ -1,3 +1,27 @@
+/* Make validation messages red */
+.error {
+  color: #b91c1c;
+}
+
+/* Optional small helper link styling */
+.helper-text {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.helper-text button {
+  background: none;
+  border: none;
+  color: #7c3aed;
+  cursor: pointer;
+  padding: 0;
+}
+.helper-text button:hover {
+  text-decoration: underline;
+}
 .register-container {
     background: #f5f5dc;
     border-radius: 10px;
