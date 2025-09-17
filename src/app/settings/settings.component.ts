@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -8,5 +9,10 @@ import { Component } from '@angular/core';
   styleUrl: './settings.component.css'
 })
 export class SettingsComponent {
+constructor(private router: Router) { }
 
+goToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+
+}
 }

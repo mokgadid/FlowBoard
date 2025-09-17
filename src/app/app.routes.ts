@@ -5,6 +5,7 @@ import { HomeComponent } from './home/home.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SettingsComponent } from './settings/settings.component';// Add this import
 import { ActivityComponent } from './activity/activity.component';
+import { authGuard } from './guards/auth.guard';
 
 
 export const routes: Routes = [
@@ -13,6 +14,6 @@ export const routes: Routes = [
 {path : 'activity', component: ActivityComponent}, // Add this route
   {path : 'settings', component: SettingsComponent}, // Add this route
   { path: 'home', component: HomeComponent }, // Add this route
-  {path : 'dashboard', component: DashboardComponent}, // Add this route
+  {path : 'dashboard', component: DashboardComponent, canActivate: [authGuard]}, // Add this route
   { path: '', redirectTo: 'register', pathMatch: 'full' }
 ];

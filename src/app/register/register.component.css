@@ -1,12 +1,12 @@
 .register-container {
     background: #f5f5dc;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 55px 55px;
-    max-width: 350px;
+    max-width: 450px;
     margin: 40px auto;
     box-shadow: 0 2px 8px rgba(128, 0, 128, 0.1);
     padding-bottom: 50px;
-    margin-top: 150px;
+    margin-top: 190px;
 }
 
 .register-container h2 {

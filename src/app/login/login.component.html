@@ -1,15 +1,24 @@
 <div class="register-container">
     <h2>Login</h2>
-    <form>
-    
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="error" *ngIf="errorMessage" style="color:#b91c1c; margin-bottom: 8px;">
+            {{ errorMessage }}
+        </div>
         <div class="form-group">
             <label for="email">Email</label>
-            <input id="email" type="email" placeholder="Enter email" />
+            <input id="email" type="email" placeholder="Enter email" formControlName="email" />
+            <div class="error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+                <span *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</span>
+                <span *ngIf="loginForm.get('email')?.errors?.['email']">Please enter a valid email.</span>
+            </div>
         </div>
         <div class="form-group">
             <label for="password">Password</label>
-            <input id="password" type="password" placeholder="Enter password" />
+            <input id="password" type="password" placeholder="Enter password" formControlName="password" />
+            <div class="error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+                <span *ngIf="loginForm.get('password')?.errors?.['required']">Password is required.</span>
+            </div>
         </div>
-        <button type="button">Login</button>
+        <button type="submit">Login</button>
     </form>
 </div>
