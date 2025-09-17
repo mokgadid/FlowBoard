@@ -11,6 +11,13 @@
 <body class="bg-amber-50 p-4 sm:p-8">
   <!-- Main Container -->
   <div class="flex flex-col items-center">
+    <div *ngIf="toastMessage" class="fixed top-4 left-1/2 -translate-x-1/2 px-8 py-3 rounded-lg shadow-lg z-50 min-w-[320px] text-center border"
+         [ngClass]="{
+           'bg-green-100 text-green-800 border-green-300': toastKind === 'success',
+           'bg-red-100 text-red-800 border-red-300': toastKind === 'danger'
+         }">
+      {{ toastMessage }}
+    </div>
     <div class="max-w-7xl w-full">
       <header class="flex flex-col sm:flex-row justify-between items-center mb-8 p-4 bg-white rounded-xl shadow-lg">
         <h1 class="text-3xl font-bold text-purple-900 tracking-tight">Flowboard</h1>

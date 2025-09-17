@@ -14,6 +14,9 @@ import { FormsModule } from '@angular/forms';
 export class DashboardComponent {
   tasks: any[] = [];
   private apiBase = 'http://localhost:4000/api';
+  toastMessage: string | null = null;
+  toastKind: 'success' | 'danger' | null = null;
+  private toastTimer: any;
 
  constructor(private router: Router, private http: HttpClient) { }
 
@@ -61,16 +64,26 @@ export class DashboardComponent {
       status: 'todo'
     };
     if (!payload.title) return;
-    this.http.post<any>(`${this.apiBase}/tasks`, payload).subscribe(() => {
-      this.newTitle = '';
-      this.newLabel = 'work';
-      this.newDueDate = '';
-      this.loadTasks();
+    this.http.post<any>(`${this.apiBase}/tasks`, payload).subscribe({
+      next: () => {
+        this.newTitle = '';
+        this.newLabel = 'work';
+        this.newDueDate = '';
+        this.loadTasks();
+        this.showToast('Task successfully created', 'success');
+      },
+      error: () => this.showToast('Failed to create task', 'danger')
     });
   }
 
   deleteTask(id: string): void {
-    this.http.delete(`${this.apiBase}/tasks/${id}`).subscribe(() => this.loadTasks());
+    this.http.delete(`${this.apiBase}/tasks/${id}`).subscribe({
+      next: () => {
+        this.loadTasks();
+        this.showToast('Task successfully deleted', 'danger');
+      },
+      error: () => this.showToast('Failed to delete task', 'danger')
+    });
   }
 
   onDragStart(event: DragEvent): void {
@@ -141,5 +154,15 @@ export class DashboardComponent {
       next: () => {},
       error: () => {}
     });
+  }
+
+  private showToast(message: string, kind: 'success' | 'danger'): void {
+    this.toastMessage = message;
+    this.toastKind = kind;
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.toastMessage = null;
+      this.toastKind = null;
+    }, 2000);
   }
 }
