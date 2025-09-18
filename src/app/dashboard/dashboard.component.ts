@@ -78,23 +78,32 @@ export class DashboardComponent {
   newTitle = '';
   newLabel = 'work';
   newDueDate: string = '';
+  newDueTime: string = '';
   today: string = this.formatDate(new Date());
 
   createTask(): void {
+    // Build ISO datetime if a date is selected (combine with time if provided)
+    let dueDateIso: string | undefined = undefined;
+    if (this.newDueDate) {
+      const time = this.newDueTime && /^\d{2}:\d{2}$/.test(this.newDueTime) ? this.newDueTime : '00:00';
+      // Use local time composition for clarity; backend stores as Date
+      dueDateIso = `${this.newDueDate}T${time}:00`;
+    }
+
     const payload = {
       title: this.newTitle,
       label: this.newLabel,
-      dueDate: this.newDueDate || undefined,
+      dueDate: dueDateIso,
       status: 'todo',
       boardId: this.selectedBoardId || undefined
     };
     if (!payload.title) return;
-    // prevent past due dates
-    if (this.newDueDate) {
-      const selected = new Date(this.newDueDate + 'T00:00:00');
-      const todayDate = new Date(this.today + 'T00:00:00');
-      if (selected < todayDate) {
-        this.showToast('Due date cannot be in the past', 'danger');
+    // prevent past due date/time
+    if (dueDateIso) {
+      const selected = new Date(dueDateIso);
+      const now = new Date();
+      if (selected.getTime() < now.getTime()) {
+        this.showToast('Due date/time cannot be in the past', 'danger');
         return;
       }
     }
@@ -245,6 +254,7 @@ export class DashboardComponent {
         this.newTitle = '';
         this.newLabel = 'work';
         this.newDueDate = '';
+        this.newDueTime = '';
         this.loadTasks();
         this.showBalloonMessage = true;
         // hide after animation
@@ -272,5 +282,34 @@ export class DashboardComponent {
   private authHeaders(): HttpHeaders {
     const token = localStorage.getItem('flowboard_token');
     return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
+  }
+
+  // ===== Overdue helpers =====
+  isOverdue(t: any): boolean {
+    if (!t) return false;
+    if (t.status === 'done') return false;
+    if (!t.dueDate) return false;
+    const due = new Date(t.dueDate);
+    if (isNaN(due.getTime())) return false;
+    return due.getTime() < Date.now();
+  }
+
+  isLongOverdue(t: any): boolean {
+    if (!this.isOverdue(t)) return false;
+    const due = new Date(t.dueDate).getTime();
+    const diffMs = Date.now() - due;
+    const oneDay = 24 * 3600 * 1000;
+    return diffMs >= oneDay; // long overdue: at least 1 day past due
+  }
+
+  // Animate zoom for only one day after crossing the long-overdue threshold
+  overdueAnimationActive(t: any): boolean {
+    if (!this.isOverdue(t)) return false;
+    const due = new Date(t.dueDate).getTime();
+    if (isNaN(due)) return false;
+    const diffMs = Date.now() - due;
+    const oneDay = 24 * 3600 * 1000;
+    // Active only between [1 day, 2 days) overdue
+    return diffMs >= oneDay && diffMs < 2 * oneDay;
   }
 }

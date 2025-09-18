@@ -1,74 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8 ">
-  <meta name="viewport" content="width=device-width, initial-scale=1.   ">
-  <title>Flowboard Activity Feed</title>
-  <!-- Tailwind CSS CDN -->
+<div class="activity-page">
+  <header class="page-header">
+    <div class="title-wrap">
+      <div class="title-glow"></div>
+      <h2>Activity</h2>
+    </div>
+    <button
+      id="back-to-dashboard"
+      class="px-6 py-3 border border-purple-600 text-purple-600 font-semibold rounded-lg hover:bg-purple-100 transition-colors"
+      type="button"
+      aria-label="Back to Dashboard"
+      (click)="goToDashboard()"
+    >
+      Back to Dashboard
+    </button>
+  </header>
 
-  
-</head>
-<body class="p-4 sm:p-8  ">
-  <div class="flex flex-col items-center justify-center">
-    <div class="max-w-4xl w-full h-full">
-      <main class="w-full">
-        <div class="bg-white rounded-xl shadow-2xl p-8 mx-auto ">
-          <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl font-bold text-purple-900">Activity Feed</h2>
-            <button class="px-4 py-2 border border-purple-600 text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-colors shadow-md hover:shadow-lg hover:translate-y-[-2px]">
-              Go Back
-            </button>
-          </div>
-          
-          <div class="space-y-6 relative timeline-line">
-            <!-- Feed Item -->
-            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d h-full">
-              <div class="flex-shrink-0 w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">JD</div>
-              <div class="flex-1">
-                <div class="text-sm text-gray-800">
-                  <span class="font-semibold text-purple-700">John Doe</span> created a new task <span class="font-semibold">"Design landing page"</span> in the <span class="font-semibold">"To Do"</span> column.
-                </div>
-                <div class="text-xs text-gray-500 mt-1">10 minutes ago</div>
-              </div>
-            </div>
-
-            <!-- Feed Item -->
-            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d">
-              <div class="flex-shrink-0 w-10 h-10 bg-gray-500 text-white rounded-full flex items-center justify-center font-bold">JS</div>
-              <div class="flex-1">
-                <div class="text-sm text-gray-800">
-                  <span class="font-semibold text-purple-700">Jane Smith</span> moved task <span class="font-semibold">"Develop backend API"</span> from <span class="font-semibold">"In Progress"</span> to <span class="font-semibold">"Done"</span>.
-                </div>
-                <div class="text-xs text-gray-500 mt-1">1 hour ago</div>
-              </div>
-            </div>
-
-            <!-- Feed Item -->
-            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d">
-              <div class="flex-shrink-0 w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">JD</div>
-              <div class="flex-1">
-                <div class="text-sm text-gray-800">
-                  <span class="font-semibold text-purple-700">John Doe</span> assigned task <span class="font-semibold">"Write documentation"</span> to <span class="font-semibold">Peter Jones</span>.
-                </div>
-                <div class="text-xs text-gray-500 mt-1">2 hours ago</div>
-              </div>
-            </div>
-
-            <!-- Feed Item -->
-            <div class="flex items-start space-x-4 bg-amber-50 rounded-lg p-4 relative z-10 feed-item-3d">
-              <div class="flex-shrink-0 w-10 h-10 bg-gray-500 text-white rounded-full flex items-center justify-center font-bold">PJ</div>
-              <div class="flex-1">
-                <div class="text-sm text-gray-800">
-                  <span class="font-semibold text-purple-700">Peter Jones</span> joined the board.
-                </div>
-                <div class="text-xs text-gray-500 mt-1">3 hours ago</div>
-              </div>
-            </div>
+  <section class="insights-grid">
+    <!-- Completion Donut -->
+    <article class="card chart-card flow-in">
+      <div class="card-header">
+        <h3>Overall Completion</h3>
+        <span class="badge success">Live</span>
+      </div>
+      <div class="donut-wrap">
+        <!-- Donut bound to component state -->
+        <div
+          class="donut"
+          [style.--percent]="completionPercent"
+          role="img"
+          aria-label="Overall completion"
+          [attr.aria-valuemin]="0"
+          [attr.aria-valuemax]="100"
+          [attr.aria-valuenow]="completionPercent"
+        >
+          <div class="donut-fill"></div>
+          <div class="donut-center">
+            <div class="donut-value">{{ completionPercent }}%</div>
+            <div class="donut-caption">Completed</div>
           </div>
         </div>
-      </main>
-    </div>
-  </div>
-</body>
-</html>
+        <ul class="legend">
+          <li><span class="swatch swatch-done"></span>Completed <strong>({{ completedCount }})</strong></li>
+          <li><span class="swatch swatch-pending"></span>Uncompleted <strong>({{ uncompletedCount }})</strong></li>
+        </ul>
+        <div class="progress-mini" aria-hidden="true">
+          <div class="progress-done" [style.width.%]="completedSharePercent"></div>
+          <div class="progress-pending" [style.width.%]="uncompletedSharePercent"></div>
+        </div>
+      </div>
+    </article>
 
+    <!-- Past Due Bar Chart -->
+    <article class="card chart-card flow-in delay-1">
+      <div class="card-header">
+        <h3>Past-Due Tasks</h3>
+        <span class="badge warning">Weekly</span>
+      </div>
+      <div class="bar-chart" role="img" aria-label="Past due tasks per day (last 7 days)">
+        <div
+          class="bar"
+          *ngFor="let d of weekData"
+          [style.--value]="d.percent"
+          [attr.data-label]="d.label"
+        >
+          <span>{{ d.count }}</span>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- Activity Feed -->
+  <section class="card feed-card fade-in">
+    <div class="card-header">
+      <h3>Activity Feed</h3>
+    </div>
+    <div class="feed timeline-line">
+      <div class="feed-item" *ngFor="let f of feedItems">
+        <div class="avatar" [class.alt]="f.kind === 'overdue'" aria-hidden="true">
+          {{ f.kind === 'overdue' ? 'OD' : 'PD' }}
+        </div>
+        <div class="feed-body">
+          <div class="feed-text">
+            <strong>{{ f.kind === 'overdue' ? 'Overdue' : 'Pending' }}</strong> — {{ f.message }}
+          </div>
+          <div class="feed-time">{{ f.when | date:'short' }}</div>
+        </div>
+        <button type="button" class="feed-delete" aria-label="Delete feed item" (click)="deleteFeedItem(f.id)">
+          ✕
+        </button>
+      </div>
+      <div *ngIf="feedItems.length === 0" class="feed-empty text-sm text-gray-500 px-2 py-1">No recent activity</div>
+    </div>
+  </section>
+</div>

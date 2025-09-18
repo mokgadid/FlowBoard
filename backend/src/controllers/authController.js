@@ -46,6 +46,34 @@ async function login(req, res, next) {
   }
 }
 
-module.exports = { register, login };
+async function updateProfile(req, res, next) {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const { username, email, password } = req.body || {};
+    const update = {};
+    if (username) update.username = username;
+    if (email) update.email = email;
+    if (password) update.passwordHash = await bcrypt.hash(password, 10);
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+
+    const user = await User.findByIdAndUpdate(userId, update, { new: true, runValidators: true });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const token = signToken(user);
+    res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
+  } catch (err) {
+    if (err && (err.code === 11000 || (err.name === 'MongoServerError' && err.message && err.message.includes('E11000')))) {
+      return res.status(409).json({ message: 'Username or email already in use' });
+    }
+    next(err);
+  }
+}
+
+module.exports = { register, login, updateProfile };
 
 
