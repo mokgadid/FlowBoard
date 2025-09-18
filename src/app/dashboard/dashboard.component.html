@@ -34,8 +34,9 @@
          <button class="px-4 py-2 bg-purple-900 text-white font-semibold rounded-lg shadow-md hover:bg-purple-800 transition-colors" (click)="navigateToHome()">
   Logout
 </button>
-         <button class="px-4 py-2 bg-purple-100 text-purple-900 font-semibold rounded-lg shadow-md hover:bg-purple-200 transition-colors" [routerLink]="['/activity']">
+         <button class="relative px-4 py-2 bg-purple-100 text-purple-900 font-semibold rounded-lg shadow-md hover:bg-purple-200 transition-colors" [routerLink]="['/activity']">
   Feed
+  <span *ngIf="(feedCount$ | async) as c" class="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center shadow" [class.hidden]="!c || c === 0">{{ c }}</span>
 </button>
            <button
   class="px-5 py-2 bg-purple-900 text-white font-semibold rounded-lg shadow-md hover:bg-purple-800 transition-colors"

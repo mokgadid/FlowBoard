@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { FeedService } from '../services/feed.service';
 import { Router } from '@angular/router';
 
 
@@ -27,6 +28,8 @@ export class ActivityComponent implements OnInit, OnDestroy {
   };
 
   // Backend data and computed insights
+  // NOTE: apiBase is hard-coded for local dev. Consider moving to environment.ts
+  // e.g., environment.apiBase = 'http://localhost:4000/api'
   private apiBase = 'http://localhost:4000/api';
   boards: any[] = [];
   selectedBoardId = '';
@@ -57,14 +60,16 @@ export class ActivityComponent implements OnInit, OnDestroy {
     { label: 'Sun', count: 0, percent: 0 },
   ];
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private feedSvc: FeedService) {}
 
   ngOnInit(): void {
     // Load boards and tasks, then compute insights
     this.loadBoards();
     // Periodic refresh to keep data fresh from backend
+    // NOTE: 5s poll is a UX choice. For production, consider SSE/WebSocket or a larger interval
     this.pollId = setInterval(() => this.loadTasks(), 5000);
     // Periodic recompute using current tasks so time-based transitions (e.g., overdue at due time) reflect without fetch
+    // NOTE: 2s compute tick ensures timely UI updates without requesting the server
     this.computeTickId = setInterval(() => this.computeInsights(), 2000);
     document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
@@ -128,12 +133,14 @@ export class ActivityComponent implements OnInit, OnDestroy {
 
   loadTasks(): void {
     // Aggregate across ALL boards for Activity insights; do not pass boardId filter
+    // NOTE: If you want per-board Activity, add a toggle and include ?boardId
     this.http.get<any[]>(`${this.apiBase}/tasks`, { headers: this.authHeaders() }).subscribe({
       next: (tasks) => {
         this.tasks = tasks || [];
         this.computeInsights();
       },
       error: () => {
+        // still try to compute with empty data
         this.tasks = [];
         this.computeInsights();
       }
@@ -160,6 +167,7 @@ export class ActivityComponent implements OnInit, OnDestroy {
     this.uncompletedSharePercent = 100 - this.completedSharePercent;
 
     // Past-due buckets for last 7 days by weekday
+    // NOTE: Window is fixed to 7 days (Mon–Sun). Make configurable if needed
     const now = new Date();
     // Start from Monday index 0 ... Sunday index 6 for display order
     const weekdayIndex = (d: Date) => (d.getDay() + 6) % 7; // JS: Sun=0 -> 6
@@ -214,10 +222,14 @@ export class ActivityComponent implements OnInit, OnDestroy {
     // Sort by recency (most recent first) and limit to 30 items
     items.sort((a, b) => (b.when?.getTime?.() || 0) - (a.when?.getTime?.() || 0));
     this.feedItems = items.slice(0, 30);
+    this.feedSvc.setCount(this.feedItems.length);
   }
 
   // Allow user to delete a feed item (in-memory only)
   deleteFeedItem(id: string): void {
+    const item = this.feedItems.find(x => x.id === id);
     this.feedItems = this.feedItems.filter(x => x.id !== id);
+    if (item?.taskId) this.feedSvc.addSuppressed(item.taskId);
+    this.feedSvc.setCount(this.feedItems.length);
   }
 }

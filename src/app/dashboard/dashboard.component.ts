@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { FeedService } from '../services/feed.service';
+import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -17,18 +19,24 @@ export class DashboardComponent {
   boards: any[] = [];
   selectedBoardId: string = '';
   newBoardName: string = '';
+  // NOTE: Hard-coded API base for local dev; consider moving to environment.ts
+  // e.g., environment.apiBase = 'http://localhost:4000/api'
   private apiBase = 'http://localhost:4000/api';
   isLoadingBoard: boolean = false;
   toastMessage: string | null = null;
   toastKind: 'success' | 'danger' | null = null;
-  private toastTimer: any;
+  private toastTimer: any; // NOTE: used with a fixed 2000ms toast duration below
   showBalloon: boolean = false;
   showBalloonMessage: boolean = false;
   private pendingPayload: any | null = null;
 
- constructor(private router: Router, private http: HttpClient) { }
+  feedCount$: Observable<number>;
 
- goToSettings(): void {
+  constructor(private http: HttpClient, private router: Router, private feedSvc: FeedService) { 
+    this.feedCount$ = this.feedSvc.count$;
+  }
+
+  goToSettings(): void {
     this.router.navigate(['/settings']);
   }
 
@@ -38,6 +46,8 @@ export class DashboardComponent {
 
   ngOnInit(): void {
     this.loadBoards();
+    // ensure global feed counter starts polling immediately
+    this.feedSvc.start();
   }
 
   loadBoards(): void {
@@ -150,6 +160,8 @@ export class DashboardComponent {
       next: () => {
         this.loadTasks();
         this.showToast('Task successfully deleted', 'danger');
+        // update feed counter as pending items may reduce
+        this.feedSvc.refresh();
       },
       error: () => this.showToast('Failed to delete task', 'danger')
     });
@@ -220,7 +232,7 @@ export class DashboardComponent {
     if (!taskId) return;
 
     this.http.put(`${this.apiBase}/tasks/${taskId}`, { status }, { headers: this.authHeaders() }).subscribe({
-      next: () => {},
+      next: () => { this.feedSvc.refresh(); },
       error: () => {}
     });
   }
@@ -229,6 +241,7 @@ export class DashboardComponent {
     this.toastMessage = message;
     this.toastKind = kind;
     if (this.toastTimer) clearTimeout(this.toastTimer);
+    // NOTE: Toast duration is hard-coded to 2000ms
     this.toastTimer = setTimeout(() => {
       this.toastMessage = null;
       this.toastKind = null;
@@ -256,6 +269,8 @@ export class DashboardComponent {
         this.newDueDate = '';
         this.newDueTime = '';
         this.loadTasks();
+        // reflect new pending item in feed counter immediately
+        this.feedSvc.refresh();
         this.showBalloonMessage = true;
         // hide after animation
         setTimeout(() => {
@@ -294,6 +309,7 @@ export class DashboardComponent {
     return due.getTime() < Date.now();
   }
 
+  // NOTE: Long-overdue threshold is hard-coded to 1 day (24h)
   isLongOverdue(t: any): boolean {
     if (!this.isOverdue(t)) return false;
     const due = new Date(t.dueDate).getTime();
@@ -303,6 +319,7 @@ export class DashboardComponent {
   }
 
   // Animate zoom for only one day after crossing the long-overdue threshold
+  // NOTE: Badge zoom animation window is hard-coded to [1 day, 2 days)
   overdueAnimationActive(t: any): boolean {
     if (!this.isOverdue(t)) return false;
     const due = new Date(t.dueDate).getTime();

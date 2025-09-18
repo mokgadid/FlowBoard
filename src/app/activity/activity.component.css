@@ -279,10 +279,13 @@
   border-radius: .6rem .6rem .25rem .25rem;
   box-shadow: 0 6px 12px rgba(109, 40, 217, .18);
   position: relative;
+  /* Animated gradient shimmer */
+  background-size: 100% 250%;
+  animation: bar-gradient 3.2s ease-in-out infinite;
 }
 
-.bar:nth-child(odd) { filter: hue-rotate(-10deg); }
-.bar:nth-child(even) { filter: hue-rotate(10deg); }
+.bar:nth-child(odd) { filter: hue-rotate(-10deg); animation-duration: 3.2s; }
+.bar:nth-child(even) { filter: hue-rotate(10deg); animation-duration: 4s; }
 
 .bar span {
   position: absolute;
@@ -308,7 +311,12 @@
   color: var(--ink-muted);
 }
 
-/* animation removed per request */
+/* Gradient shimmer keyframes (keeps bar height static) */
+@keyframes bar-gradient {
+  0% { background-position: 50% 0%; }
+  50% { background-position: 50% 100%; }
+  100% { background-position: 50% 0%; }
+}
 
 /* Feed */
 .feed-card { max-width: 1100px; margin: 0 auto; }
